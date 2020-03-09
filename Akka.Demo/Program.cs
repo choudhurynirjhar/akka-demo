@@ -11,15 +11,23 @@ namespace Akka.Demo
         static void Main(string[] args)
         {
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddSingleton<IEmailNotification, EmailNotification>();
-            serviceCollection.AddSingleton<NotificationActor>();
+            serviceCollection.AddScoped<IEmailNotification, EmailNotification>();
+            serviceCollection.AddScoped<NotificationActor>();
+            serviceCollection.AddScoped<TextNotificationActor>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
             
             using var actorSystem = ActorSystem.Create("test-actor-system");
             actorSystem.UseServiceProvider(serviceProvider);
             
             var actor = actorSystem.ActorOf(actorSystem.DI().Props<NotificationActor>());
-            actor.Tell("Hello there!");
+
+            Console.WriteLine("Enter message");
+            while (true)
+            {
+                var message = Console.ReadLine();
+                if (message == "q") break;
+                actor.Tell(message);
+            }
             Console.ReadLine();
             actorSystem.Stop(actor);
         }
